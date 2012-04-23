@@ -38,8 +38,9 @@ class Endpoint(object):
     def __init__(self, client):
         self.client = client
 
-    def _get(self, url):
-        resp = self.client.session.get(self.client.qualified_url(url))
+    def _get(self, url, params={}):
+        resp = self.client.session.get(self.client.qualified_url(url),
+                params=params)
         if resp.status_code != 200:
             raise BasecampError(resp.status_code)
         return json.loads(resp.content)
@@ -126,6 +127,32 @@ class People(Endpoint):
     def delete(self, person_id):
         return self._delete('%s/%s' % (self.BASE_URL, person_id))
 
+
+class Events(Endpoint):
+
+    BASE_URL = 'events'
+    PAGE_SIZE = 50
+
+    def list(self, project_id=None, since=None):
+        """List either all events available to the user, or events
+        from a specific project only. If the 'since' parameter is
+        given, only list newer events.
+        """
+        if since is not None:
+            since = since.isoformat()
+
+        url = self.BASE_URL
+        if project_id is not None:
+            url = '%s/%s/%s' % (Projects.BASE_URL, project_id, self.BASE_URL)
+
+        page = 1
+        while True:
+            events = self._get(url, params={'page': page, 'since': since})
+            for event in events:
+                yield event
+            if len(events) < self.PAGE_SIZE:
+                break
+            page += 1
 
 
 class Auth(object):
