@@ -44,12 +44,13 @@ class Endpoint(object):
             raise BasecampError(resp.status_code)
         return json.loads(resp.content)
 
-    def _post(self, url, data={}):
+    def _post(self, url, data={}, expect=201):
         resp = self.client.session.post(self.client.qualified_url(url),
                 json.dumps(data))
-        if resp.status_code != 201:
+        if resp.status_code != expect:
             raise BasecampError(resp.status_code)
-        return json.loads(resp.content)
+        if resp.content:
+            return json.loads(resp.content)
 
     def _put(self, url, data={}):
         resp = self.client.session.put(self.client.qualified_url(url),
@@ -64,7 +65,7 @@ class Endpoint(object):
             raise BasecampError(resp.status_code)
 
 
-class Project(Endpoint):
+class Projects(Endpoint):
 
     BASE_URL = 'projects'
 
@@ -95,6 +96,35 @@ class Project(Endpoint):
 
     def delete(self, project_id):
         return self._delete('%s/%s' % (self.BASE_URL, project_id))
+
+    def accesses(self, project_id):
+        return self._get('%s/%s/accesses' % (self.BASE_URL, project_id))
+
+    def grant_access(self, project_id, ids=[], emails=[]):
+        if not ids and not emails:
+            return
+        return self._post('%s/%s/accesses' % (self.BASE_URL, project_id),
+                {'ids': ids, 'email_addresses': emails}, expect=204)
+
+    def revoke_access(self, project_id, person_id):
+        return self._delete('%s/%s/accesses/%s' %
+                (self.BASE_URL, project_id, person_id))
+
+
+class People(Endpoint):
+
+    BASE_URL = 'people'
+
+    def list(self):
+        return self._get(self.BASE_URL)
+
+    def get(self, person_id=None):
+        if not person_id:
+            return self._get('%s/me' % self.BASE_URL)
+        return self._get('%s/%s' % (self.BASE_URL, person_id))
+
+    def delete(self, person_id):
+        return self._delete('%s/%s' % (self.BASE_URL, person_id))
 
 
 
