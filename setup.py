@@ -13,7 +13,7 @@ required = ['requests>=0.11.2',
 
 setup(
     name = 'basecamp-next',
-    version = '0.0.1',
+    version = '0.1.0',
     author = 'Rimvydas Naktinis',
     author_email = 'naktinis@gmail.com',
     description = ('Wrapper for Basecamp Next.'),
