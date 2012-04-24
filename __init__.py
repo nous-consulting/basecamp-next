@@ -1,5 +1,6 @@
 import json
 import requests
+from mimetypes import guess_type
 
 
 class BasecampError(Exception):
@@ -45,9 +46,13 @@ class Endpoint(object):
             raise BasecampError(resp.status_code)
         return json.loads(resp.content)
 
-    def _post(self, url, data={}, expect=201):
-        resp = self.client.session.post(self.qualified_url(url),
-                json.dumps(data))
+    def _post(self, url, data={}, expect=201, mimetype=None):
+        if type(data) is not dict:
+            resp = self.client.session.post(self.qualified_url(url),
+                    data, headers={'Content-Type': mimetype})
+        else:
+            resp = self.client.session.post(self.qualified_url(url),
+                    json.dumps(data))
         if resp.status_code != expect:
             raise BasecampError(resp.status_code)
         if resp.content:
@@ -178,6 +183,34 @@ class Events(Endpoint):
             page += 1
 
 
+class Attachments(Endpoint):
+
+    SECTION_URL = 'attachments'
+    PAGE_SIZE = 50
+
+    def list(self, project_id):
+        page = 1
+        while True:
+            attachments = self._get('%s/%s/%s' %
+                    (Projects.SECTION_URL, project_id, self.SECTION_URL),
+                    params={'page': page})
+            for attachment in attachments:
+                yield attachment
+            if len(attachments) < self.PAGE_SIZE:
+                break
+            page += 1
+
+    def upload(self, f, mimetype=None):
+        """Upload a file to Basecamp.
+        """
+        guessed_type = (guess_type(f.name)[0]
+                if mimetype is None else mimetype)
+        return self._post(self.SECTION_URL,
+                f.read(),
+                mimetype=guessed_type if guessed_type else 'text/plain',
+                expect=200)
+
+
 class Topics(ProjectEndpoint):
 
     SECTION_URL = 'topics'
@@ -204,12 +237,15 @@ class Messages(ProjectEndpoint):
         return self._get('%s/%s' % (self.SECTION_URL, message_id))
 
     def post(self, subject, content=None, attachments=None):
+        """Post a new message.
+        Attachments must be a list with one or more dicts.
+        """
         return self._post(self.SECTION_URL,
                 {'subject': subject,
                  'content': content,
                  'attachments': attachments})
 
-    def update(self, message_id, subject, content=None, attachments=None):
+    def update(self, message_id, subject=None, content=None, attachments=None):
         return self._put('%s/%s' % (self.SECTION_URL, message_id),
                 {'subject': subject,
                  'content': content,
