@@ -348,6 +348,19 @@ class Calendars(Endpoint):
     def delete(self, calendar_id):
         return self._delete('%s/%s' % (self.SECTION_URL, calendar_id))
 
+    def accesses(self, calendar_id):
+        return self._get('%s/%s/accesses' % (self.SECTION_URL, calendar_id))
+
+    def grant_access(self, calendar_id, ids=[], emails=[]):
+        if not ids and not emails:
+            return
+        return self._post('%s/%s/accesses' % (self.SECTION_URL, calendar_id),
+                {'ids': ids, 'email_addresses': emails}, expect=204)
+
+    def revoke_access(self, calendar_id, person_id):
+        return self._delete('%s/%s/accesses/%s' %
+                (self.SECTION_URL, calendar_id, person_id))
+
 
 class CalendarEvents(Endpoint):
 
@@ -393,4 +406,3 @@ class CalendarEvents(Endpoint):
 
     def delete(self, event_id):
         return self._delete('%s/%s' % (self.SECTION_URL, event_id))
-
