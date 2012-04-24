@@ -273,3 +273,24 @@ class Todos(ProjectEndpoint):
         - position.
         """
         return self._put('%s/%s' % (self.SECTION_URL, todo_id), todo_dict)
+
+
+class Documents(ProjectEndpoint):
+
+    SECTION_URL = 'documents'
+
+    def list(self):
+        return self._get(self.SECTION_URL)
+
+    def get(self, document_id):
+        return self._get('%s/%s' % (self.SECTION_URL, document_id))
+
+    def post(self, title, content=None):
+        return self._post(self.SECTION_URL,
+                {'title': title,
+                 'content': content})
+
+    def update(self, document_id, title, content=None):
+        return self._put('%s/%s' % (self.SECTION_URL, document_id),
+                {'title': title,
+                 'content': content})
