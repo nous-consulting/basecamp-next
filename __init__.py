@@ -248,3 +248,28 @@ class TodoLists(ProjectEndpoint):
                 {'name': name,
                  'description': description,
                  'position': position})
+
+
+class Todos(ProjectEndpoint):
+
+    SECTION_URL = 'todos'
+
+    def get(self, todo_id):
+        return self._get('%s/%s' % (self.SECTION_URL, todo_id))
+
+    def post(self, todolist_id, todo_dict):
+        """Fields accepted in the dict are:
+        - content,
+        - due_at,
+        - assignee dict (with id and type fields).
+        """
+        return self._post('%s/%s/%s' %
+                (TodoLists.SECTION_URL, todolist_id, self.SECTION_URL),
+                todo_dict)
+
+    def update(self, todo_id, todo_dict):
+        """Fields accepted (apart from fields defined in post):
+        - completed,
+        - position.
+        """
+        return self._put('%s/%s' % (self.SECTION_URL, todo_id), todo_dict)
