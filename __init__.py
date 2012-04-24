@@ -71,7 +71,7 @@ class ProjectEndpoint(Endpoint):
     E.g. messages, todos, comments etc.
     """
 
-    BASE_URL = 'projects'
+    SECTION_URL = 'projects'
 
     def __init__(self, client, project_id):
         super(ProjectEndpoint, self).__init__(client)
@@ -79,74 +79,74 @@ class ProjectEndpoint(Endpoint):
 
     def qualified_url(self, url):
         return super(ProjectEndpoint, self).qualified_url('%s/%s/%s' % (
-            Projects.BASE_URL, self.project_id, url))
+            Projects.SECTION_URL, self.project_id, url))
 
 
 class Projects(Endpoint):
 
-    BASE_URL = 'projects'
+    SECTION_URL = 'projects'
 
     def list(self, archived=False):
         if archived:
-            return self._get('%s/archived' % self.BASE_URL)
-        return self._get(self.BASE_URL)
+            return self._get('%s/archived' % self.SECTION_URL)
+        return self._get(self.SECTION_URL)
 
     def get(self, project_id):
-        return self._get('%s/%s' % (self.BASE_URL, project_id))
+        return self._get('%s/%s' % (self.SECTION_URL, project_id))
 
     def post(self, name, description=None):
-        return self._post(self.BASE_URL,
+        return self._post(self.SECTION_URL,
                 {'name': name,
                  'description': description})
 
     def update(self, project_id, name, description=None):
-        return self._put('%s/%s' % (self.BASE_URL, project_id),
+        return self._put('%s/%s' % (self.SECTION_URL, project_id),
                 {'name': name,
                  'description': description})
 
     def archive(self, project_id, archived=True):
-        return self._put('%s/%s' % (self.BASE_URL, project_id),
+        return self._put('%s/%s' % (self.SECTION_URL, project_id),
                 {'archived': archived})
 
     def activate(self, project_id):
         return self.archive(project_id, False)
 
     def delete(self, project_id):
-        return self._delete('%s/%s' % (self.BASE_URL, project_id))
+        return self._delete('%s/%s' % (self.SECTION_URL, project_id))
 
     def accesses(self, project_id):
-        return self._get('%s/%s/accesses' % (self.BASE_URL, project_id))
+        return self._get('%s/%s/accesses' % (self.SECTION_URL, project_id))
 
     def grant_access(self, project_id, ids=[], emails=[]):
         if not ids and not emails:
             return
-        return self._post('%s/%s/accesses' % (self.BASE_URL, project_id),
+        return self._post('%s/%s/accesses' % (self.SECTION_URL, project_id),
                 {'ids': ids, 'email_addresses': emails}, expect=204)
 
     def revoke_access(self, project_id, person_id):
         return self._delete('%s/%s/accesses/%s' %
-                (self.BASE_URL, project_id, person_id))
+                (self.SECTION_URL, project_id, person_id))
 
 
 class People(Endpoint):
 
-    BASE_URL = 'people'
+    SECTION_URL = 'people'
 
     def list(self):
-        return self._get(self.BASE_URL)
+        return self._get(self.SECTION_URL)
 
     def get(self, person_id=None):
         if not person_id:
-            return self._get('%s/me' % self.BASE_URL)
-        return self._get('%s/%s' % (self.BASE_URL, person_id))
+            return self._get('%s/me' % self.SECTION_URL)
+        return self._get('%s/%s' % (self.SECTION_URL, person_id))
 
     def delete(self, person_id):
-        return self._delete('%s/%s' % (self.BASE_URL, person_id))
+        return self._delete('%s/%s' % (self.SECTION_URL, person_id))
 
 
 class Events(Endpoint):
 
-    BASE_URL = 'events'
+    SECTION_URL = 'events'
     PAGE_SIZE = 50
 
     def list(self, project_id=None, since=None):
@@ -157,9 +157,9 @@ class Events(Endpoint):
         if since is not None:
             since = since.isoformat()
 
-        url = self.BASE_URL
+        url = self.SECTION_URL
         if project_id is not None:
-            url = '%s/%s/%s' % (Projects.BASE_URL, project_id, self.BASE_URL)
+            url = '%s/%s/%s' % (Projects.SECTION_URL, project_id, self.SECTION_URL)
 
         page = 1
         while True:
@@ -173,7 +173,7 @@ class Events(Endpoint):
 
 class Topics(ProjectEndpoint):
 
-    BASE_URL = 'topics'
+    SECTION_URL = 'topics'
     PAGE_SIZE = 50
 
     def list(self):
@@ -181,7 +181,7 @@ class Topics(ProjectEndpoint):
         """
         page = 1
         while True:
-            topics = self._get(self.BASE_URL, params={'page': page})
+            topics = self._get(self.SECTION_URL, params={'page': page})
             for topic in topics:
                 yield topic
             if len(topics) < self.PAGE_SIZE:
@@ -191,22 +191,35 @@ class Topics(ProjectEndpoint):
 
 class Messages(ProjectEndpoint):
 
-    BASE_URL = 'messages'
+    SECTION_URL = 'messages'
 
     def get(self, message_id):
-        return self._get('%s/%s' % (self.BASE_URL, message_id))
+        return self._get('%s/%s' % (self.SECTION_URL, message_id))
 
     def post(self, subject, content=None, attachments=None):
-        return self._post(self.BASE_URL,
+        return self._post(self.SECTION_URL,
                 {'subject': subject,
                  'content': content,
                  'attachments': attachments})
 
     def update(self, message_id, subject, content=None, attachments=None):
-        return self._put('%s/%s' % (self.BASE_URL, message_id),
+        return self._put('%s/%s' % (self.SECTION_URL, message_id),
                 {'subject': subject,
                  'content': content,
                  'attachments': attachments})
 
     def delete(self, message_id):
-        return self._delete('%s/%s' % (self.BASE_URL, message_id))
+        return self._delete('%s/%s' % (self.SECTION_URL, message_id))
+
+
+class Comments(ProjectEndpoint):
+
+    SECTION_URL = 'comments'
+
+    def post(self, content, section, topic_id, attachments=None):
+        return self._post('%s/%s/%s' % (section, topic_id, self.SECTION_URL),
+                {'content': content,
+                 'attachments': attachments})
+
+    def delete(self, comment_id):
+        return self._delete('%s/%s' % (self.SECTION_URL, comment_id))
