@@ -152,3 +152,23 @@ class Events(Endpoint):
             if len(events) < self.PAGE_SIZE:
                 break
             page += 1
+
+
+class Topics(Endpoint):
+
+    BASE_URL = 'topics'
+    PAGE_SIZE = 50
+
+    def list(self, project_id):
+        """List all topics available in a given project.
+        """
+        url = '%s/%s/%s' % (Projects.BASE_URL, project_id, self.BASE_URL)
+
+        page = 1
+        while True:
+            topics = self._get(url, params={'page': page})
+            for topic in topics:
+                yield topic
+            if len(topics) < self.PAGE_SIZE:
+                break
+            page += 1
