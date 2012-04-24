@@ -81,6 +81,9 @@ class ProjectEndpoint(Endpoint):
         return super(ProjectEndpoint, self).qualified_url('%s/%s/%s' % (
             Projects.SECTION_URL, self.project_id, url))
 
+    def delete(self, item_id):
+        return self._delete('%s/%s' % (self.SECTION_URL, item_id))
+
 
 class Projects(Endpoint):
 
@@ -139,6 +142,10 @@ class People(Endpoint):
         if not person_id:
             return self._get('%s/me' % self.SECTION_URL)
         return self._get('%s/%s' % (self.SECTION_URL, person_id))
+
+    def assigned_todos(self, person_id=None):
+        return self._get('%s/%s/assigned_todos' % \
+                (self.SECTION_URL, person_id))
 
     def delete(self, person_id):
         return self._delete('%s/%s' % (self.SECTION_URL, person_id))
@@ -208,18 +215,36 @@ class Messages(ProjectEndpoint):
                  'content': content,
                  'attachments': attachments})
 
-    def delete(self, message_id):
-        return self._delete('%s/%s' % (self.SECTION_URL, message_id))
-
 
 class Comments(ProjectEndpoint):
 
     SECTION_URL = 'comments'
 
-    def post(self, content, section, topic_id, attachments=None):
+    def post(self, section, topic_id, content, attachments=None):
         return self._post('%s/%s/%s' % (section, topic_id, self.SECTION_URL),
                 {'content': content,
                  'attachments': attachments})
 
-    def delete(self, comment_id):
-        return self._delete('%s/%s' % (self.SECTION_URL, comment_id))
+
+class TodoLists(ProjectEndpoint):
+
+    SECTION_URL = 'todolists'
+
+    def list(self, completed=False):
+        if completed:
+            return self._get('%s/completed' % self.SECTION_URL)
+        return self._get(self.SECTION_URL)
+
+    def get(self, todolist_id):
+        return self._get('%s/%s' % (self.SECTION_URL, todolist_id))
+
+    def post(self, name, description=None):
+        return self._post(self.SECTION_URL,
+                {'name': name,
+                 'description': description})
+
+    def update(self, todolist_id, name, description=None, position=None):
+        return self._put('%s/%s' % (self.SECTION_URL, todolist_id),
+                {'name': name,
+                 'description': description,
+                 'position': position})
