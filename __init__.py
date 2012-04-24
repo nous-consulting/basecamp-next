@@ -58,12 +58,13 @@ class Endpoint(object):
         if resp.content:
             return json.loads(resp.content)
 
-    def _put(self, url, data={}):
+    def _put(self, url, data={}, expect=200):
         resp = self.client.session.put(self.qualified_url(url),
                 json.dumps(data))
-        if resp.status_code != 200:
+        if resp.status_code != expect:
             raise BasecampError(resp.status_code)
-        return json.loads(resp.content)
+        if resp.content:
+            return json.loads(resp.content)
 
     def _delete(self, url):
         resp = self.client.session.delete(self.qualified_url(url))
@@ -330,3 +331,88 @@ class Documents(ProjectEndpoint):
         return self._put('%s/%s' % (self.SECTION_URL, document_id),
                 {'title': title,
                  'content': content})
+
+
+class Uploads(ProjectEndpoint):
+
+    SECTION_URL = 'uploads'
+
+    def get(self, upload_id):
+        return self._get('%s/%s' % (self.SECTION_URL, upload_id))
+
+    def post(self, attachments, content=None):
+        """Create a new file in the uploaded file section.
+
+        attachments -- a list of dicts containing an attachment
+        token and a file name.
+        """
+        return self._post(self.SECTION_URL,
+                {'content': content,
+                 'attachments': attachments})
+
+
+class Calendars(Endpoint):
+
+    SECTION_URL = 'calendars'
+
+    def list(self):
+        return self._get(self.SECTION_URL)
+
+    def get(self, calendar_id):
+        return self._get('%s/%s' % (self.SECTION_URL, calendar_id))
+
+    def create(self, name):
+        return self._post(self.SECTION_URL, {'name': name})
+
+    def update(self, calendar_id, name):
+        return self._put('%s/%s' % (self.SECTION_URL, calendar_id),
+                {'name': name}, expect=204)
+
+    def delete(self, calendar_id):
+        return self._delete('%s/%s' % (self.SECTION_URL, calendar_id))
+
+
+class CalendarEvents(Endpoint):
+
+    SECTION_URL = 'calendar_events'
+
+    def __init__(self, client, project_id=None, calendar_id=None):
+        super(CalendarEvents, self).__init__(client)
+        assert not project_id or not calendar_id, \
+                "Only give project id or calendar id, not both!"
+        if project_id:
+            self.parent_section = Projects.SECTION_URL
+            self.parent_id = project_id
+        else:
+            self.parent_section = Calendars.SECTION_URL
+            self.parent_id = calendar_id
+
+    def qualified_url(self, url):
+        return super(CalendarEvents, self).qualified_url('%s/%s/%s' % (
+            self.parent_section, self.parent_id, url))
+
+    def list(self, past=False):
+        if past:
+            return self._get('%s/past' % self.SECTION_URL)
+        return self._get(self.SECTION_URL)
+
+    def get(self, event_id):
+        return self._get('%s/%s' % (self.SECTION_URL, event_id))
+
+    def create(self, event_dict):
+        """Create an event on Basecamp.
+        Event dictionary can contain:
+        - summary,
+        - description,
+        - all_day (boolean),
+        - starts_at,
+        - ends_at.
+        """
+        return self._post(self.SECTION_URL, event_dict)
+
+    def update(self, event_id, event_dict):
+        return self._put('%s/%s' % (self.SECTION_URL, event_id),
+                event_dict)
+
+    def delete(self, event_id):
+        return self._delete('%s/%s' % (self.SECTION_URL, event_id))
