@@ -9,7 +9,7 @@ First, you need to ask user's permission to access her data:
 
 After user grants you access, get the access token:
 
-    token = auth.access_token(code)
+    token = auth.access_token(code)['access_token']
 
 Find the accounts that this user has:
 
