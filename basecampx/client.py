@@ -1,3 +1,4 @@
+import json
 import requests
 
 class Client(object):
@@ -19,4 +20,4 @@ class Client(object):
 
     def accounts(self):
         url = '%s/authorization.json' % self.LAUNCHPAD_URL
-        return self.session.get(url).content
+        return json.loads(self.session.get(url).content)
