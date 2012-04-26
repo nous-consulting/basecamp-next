@@ -1,4 +1,4 @@
-from oauth2 import OAuth2
+from requests_oauth2 import OAuth2
 
 
 class Auth(object):
