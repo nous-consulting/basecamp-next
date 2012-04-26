@@ -11,42 +11,47 @@ class Endpoint(object):
     def __init__(self, client):
         self.client = client
 
+    def error_message(self, status_code, method, url):
+        return "Got %s error while making a %s request on %s." % (status_code, method, url)
+
     def qualified_url(self, url):
         assert self.client.account_id is not None, \
                 "Pass an account id to the Client to make this request!"
         return '%s/%s.json' % (self.client.BASE_URL % self.client.account_id, url)
 
     def _get(self, url, params={}):
-        resp = self.client.session.get(self.qualified_url(url),
-                params=params)
+        url = self.qualified_url(url)
+        resp = self.client.session.get(url, params=params)
         if resp.status_code != 200:
-            raise BasecampError(resp.status_code)
+            raise BasecampError(self.error_message(resp.status_code, 'GET', url))
         return json.loads(resp.content)
 
     def _post(self, url, data={}, expect=201, mimetype=None):
+        url = self.qualified_url(url)
         if type(data) is not dict:
-            resp = self.client.session.post(self.qualified_url(url),
+            resp = self.client.session.post(url,
                     data, headers={'Content-Type': mimetype})
         else:
-            resp = self.client.session.post(self.qualified_url(url),
+            resp = self.client.session.post(url,
                     json.dumps(data))
         if resp.status_code != expect:
-            raise BasecampError(resp.status_code)
+            raise BasecampError(self.error_message(resp.status_code, 'POST', url))
         if resp.content:
             return json.loads(resp.content)
 
     def _put(self, url, data={}, expect=200):
-        resp = self.client.session.put(self.qualified_url(url),
-                json.dumps(data))
+        url = self.qualified_url(url)
+        resp = self.client.session.put(url, json.dumps(data))
         if resp.status_code != expect:
-            raise BasecampError(resp.status_code)
+            raise BasecampError(self.error_message(resp.status_code, 'PUT', url))
         if resp.content:
             return json.loads(resp.content)
 
     def _delete(self, url):
-        resp = self.client.session.delete(self.qualified_url(url))
+        url = self.qualified_url(url)
+        resp = self.client.session.delete(url)
         if resp.status_code != 204:
-            raise BasecampError(resp.status_code)
+            raise BasecampError(self.error_message(resp.status_code, 'DELETE', url))
 
 
 class ProjectEndpoint(Endpoint):
@@ -235,6 +240,10 @@ class Comments(ProjectEndpoint):
     SECTION_URL = 'comments'
 
     def post(self, section, topic_id, content, attachments=None):
+        """Post a comment to Basecamp.
+
+        section -- one of 'messages' or 'todos'.
+        """
         return self._post('%s/%s/%s' % (section, topic_id, self.SECTION_URL),
                 {'content': content,
                  'attachments': attachments})
