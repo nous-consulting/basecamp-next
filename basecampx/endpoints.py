@@ -1,4 +1,6 @@
 import json
+import collections
+import urlparse
 from mimetypes import guess_type
 
 
@@ -17,7 +19,9 @@ class Endpoint(object):
     def qualified_url(self, url):
         assert self.client.account_id is not None, \
                 "Pass an account id to the Client to make this request!"
-        return '%s/%s.json' % (self.client.BASE_URL % self.client.account_id, url)
+        account_url = self.client.BASE_URL % self.client.account_id
+        action_url = '%s.json' % url
+        return  urlparse.urljoin(account_url, action_url)
 
     def _get(self, url, params={}):
         url = self.qualified_url(url)
@@ -28,7 +32,7 @@ class Endpoint(object):
 
     def _post(self, url, data={}, expect=201, mimetype=None):
         url = self.qualified_url(url)
-        if type(data) is not dict:
+        if not isinstance(data, collections.Mapping):
             resp = self.client.session.post(url,
                     data, headers={'Content-Type': mimetype})
         else:
@@ -87,8 +91,8 @@ class Projects(Endpoint):
 
     def post(self, name, description=None):
         return self._post(self.SECTION_URL,
-                {'name': name,
-                 'description': description})
+                          {'name': name,
+                           'description': description})
 
     def update(self, project_id, name, description=None):
         return self._put('%s/%s' % (self.SECTION_URL, project_id),
@@ -97,7 +101,7 @@ class Projects(Endpoint):
 
     def archive(self, project_id, archived=True):
         return self._put('%s/%s' % (self.SECTION_URL, project_id),
-                {'archived': archived})
+                         {'archived': archived})
 
     def activate(self, project_id):
         return self.archive(project_id, False)
@@ -148,6 +152,8 @@ class Events(Endpoint):
         """List either all events available to the user, or events
         from a specific project only. If the 'since' parameter is
         given, only list newer events.
+
+        Since should be a datetime object.
         """
         if since is not None:
             since = since.isoformat()
@@ -400,6 +406,7 @@ class CalendarEvents(Endpoint):
 
     def create(self, event_dict):
         """Create an event on Basecamp.
+
         Event dictionary can contain:
         - summary,
         - description,
