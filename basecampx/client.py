@@ -1,10 +1,11 @@
 import json
+import urlparse
 import requests
 
 class Client(object):
 
-    LAUNCHPAD_URL = 'https://launchpad.37signals.com'
-    BASE_URL = 'https://basecamp.com/%s/api/v1'
+    LAUNCHPAD_URL = 'https://launchpad.37signals.com/'
+    BASE_URL = 'https://basecamp.com/%s/api/v1/'
 
     def __init__(self, access_token, user_agent, account_id=None):
         """Initialize client for making requests.
@@ -19,5 +20,5 @@ class Client(object):
                          'Content-Type': 'application/json; charset=utf-8'})
 
     def accounts(self):
-        url = '%s/authorization.json' % self.LAUNCHPAD_URL
+        url = urlparse.urljoin(self.LAUNCHPAD_URL,'authorization.json')
         return json.loads(self.session.get(url).content)
