@@ -22,7 +22,7 @@ setup(
     url='https://github.com/nous/basecamp-next',
     packages=['basecampx'],
     install_requires=required,
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
