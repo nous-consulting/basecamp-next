@@ -5,6 +5,21 @@ from mimetypes import guess_type
 
 
 class BasecampError(Exception):
+
+    @staticmethod
+    def error_message(response):
+        return ("Got %s error while making a %s request on %s." %
+                (response.status_code, response.request.method,
+                 response.request.url))
+
+    @classmethod
+    def error_from_response(cls, response):
+        if response.status_code == 401:
+            return BasecampUnauthorizedError(cls.error_message(response))
+        return cls(cls.error_message(response))
+
+
+class BasecampUnauthorizedError(Exception):
     pass
 
 
@@ -12,9 +27,6 @@ class Endpoint(object):
 
     def __init__(self, client):
         self.client = client
-
-    def error_message(self, status_code, method, url):
-        return "Got %s error while making a %s request on %s." % (status_code, method, url)
 
     def qualified_url(self, url):
         assert self.client.account_id is not None, \
@@ -27,7 +39,7 @@ class Endpoint(object):
         url = self.qualified_url(url)
         resp = self.client.session.get(url, params=params)
         if resp.status_code != 200:
-            raise BasecampError(self.error_message(resp.status_code, 'GET', url))
+            raise BasecampError.error_from_response(resp)
         return json.loads(resp.content)
 
     def _post(self, url, data={}, expect=201, mimetype=None):
@@ -39,7 +51,7 @@ class Endpoint(object):
             resp = self.client.session.post(url,
                     json.dumps(data))
         if resp.status_code != expect:
-            raise BasecampError(self.error_message(resp.status_code, 'POST', url))
+            raise BasecampError.error_from_response(resp)
         if resp.content:
             return json.loads(resp.content)
 
@@ -47,7 +59,7 @@ class Endpoint(object):
         url = self.qualified_url(url)
         resp = self.client.session.put(url, json.dumps(data))
         if resp.status_code != expect:
-            raise BasecampError(self.error_message(resp.status_code, 'PUT', url))
+            raise BasecampError.error_from_response(resp)
         if resp.content:
             return json.loads(resp.content)
 
@@ -55,7 +67,7 @@ class Endpoint(object):
         url = self.qualified_url(url)
         resp = self.client.session.delete(url)
         if resp.status_code != 204:
-            raise BasecampError(self.error_message(resp.status_code, 'DELETE', url))
+            raise BasecampError.error_from_response(resp)
 
 
 class ProjectEndpoint(Endpoint):
