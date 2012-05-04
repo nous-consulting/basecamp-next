@@ -24,7 +24,9 @@ Use a user's Basecamp Next account to access data in projects:
     client = Client(token, 'YourAppName', bcx_accounts[0]['id'])
 
     from basecampx import Projects
-    projects = Projects(client)
-    project_list = projects.list()
+    project_list = Projects(client).list()
     project_names = [project['name'] for project in project_list]
 
+Get all discussions in a project:
+
+    messages = Projects(client, 12345).topics.list()

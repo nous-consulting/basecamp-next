@@ -81,46 +81,70 @@ class Projects(Endpoint):
 
     SECTION_URL = 'projects'
 
+    def __init__(self, client, project_id=None):
+        super(Projects, self).__init__(client)
+
+        self.project_id = project_id
+        if project_id:
+            self.messages = Messages(client, project_id)
+            self.comments = Comments(client, project_id)
+            self.topics = Topics(client, project_id)
+            self.todo_lists = TodoLists(client, project_id)
+            self.todos = Todos(client, project_id)
+            self.documents = Documents(client, project_id)
+            self.uploads = Uploads(client, project_id)
+
+    def _assert_project_id(self):
+        assert self.project_id is not None, "Pass a project_id to the constructor."
+
     def list(self, archived=False):
         if archived:
             return self._get('%s/archived' % self.SECTION_URL)
         return self._get(self.SECTION_URL)
 
-    def get(self, project_id):
-        return self._get('%s/%s' % (self.SECTION_URL, project_id))
-
-    def post(self, name, description=None):
+    def create(self, name, description=None):
         return self._post(self.SECTION_URL,
                           {'name': name,
                            'description': description})
 
-    def update(self, project_id, name, description=None):
-        return self._put('%s/%s' % (self.SECTION_URL, project_id),
+    def get(self):
+        self._assert_project_id()
+        return self._get('%s/%s' % (self.SECTION_URL, self.project_id))
+
+    def update(self, name, description=None):
+        self._assert_project_id()
+        return self._put('%s/%s' % (self.SECTION_URL, self.project_id),
                 {'name': name,
                  'description': description})
 
-    def archive(self, project_id, archived=True):
-        return self._put('%s/%s' % (self.SECTION_URL, project_id),
+    def archive(self, archived=True):
+        self._assert_project_id()
+        return self._put('%s/%s' % (self.SECTION_URL, self.project_id),
                          {'archived': archived})
 
-    def activate(self, project_id):
-        return self.archive(project_id, False)
+    def activate(self):
+        self._assert_project_id()
+        return self.archive(self.project_id, False)
 
-    def delete(self, project_id):
-        return self._delete('%s/%s' % (self.SECTION_URL, project_id))
+    def delete(self):
+        self._assert_project_id()
+        return self._delete('%s/%s' % (self.SECTION_URL, self.project_id))
 
-    def accesses(self, project_id):
-        return self._get('%s/%s/accesses' % (self.SECTION_URL, project_id))
+    def accesses(self):
+        self._assert_project_id()
+        return self._get('%s/%s/accesses' % (self.SECTION_URL, self.project_id))
 
-    def grant_access(self, project_id, ids=[], emails=[]):
+    def grant_access(self, ids=[], emails=[]):
+        self._assert_project_id()
         if not ids and not emails:
             return
-        return self._post('%s/%s/accesses' % (self.SECTION_URL, project_id),
+        return self._post('%s/%s/accesses' % (self.SECTION_URL, self.project_id),
                 {'ids': ids, 'email_addresses': emails}, expect=204)
 
-    def revoke_access(self, project_id, person_id):
+    def revoke_access(self, person_id):
+        self._assert_project_id()
         return self._delete('%s/%s/accesses/%s' %
-                (self.SECTION_URL, project_id, person_id))
+                (self.SECTION_URL, self.project_id, person_id))
 
 
 class People(Endpoint):
