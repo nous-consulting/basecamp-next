@@ -16,12 +16,11 @@ Find the accounts that this user has:
 
     from basecampx import Client
     client = Client(token, 'YourAppName')
-    accounts = client.accounts()
+    accounts = client.basecamp_accounts()
 
 Use a user's Basecamp Next account to access data in projects:
 
-    bcx_accounts = filter(lambda a: a['product'] == 'bcx', accounts['accounts'])
-    client = Client(token, 'YourAppName', bcx_accounts[0]['id'])
+    client = Client(token, 'YourAppName', bcx_accounts[0])
 
     from basecampx import Projects
     project_list = Projects(client).list()

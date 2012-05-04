@@ -22,3 +22,10 @@ class Client(object):
     def accounts(self):
         url = urlparse.urljoin(self.LAUNCHPAD_URL,'authorization.json')
         return json.loads(self.session.get(url).content)
+
+    def basecamp_accounts(self, only_next=True):
+        products = ['bcx']
+        if not only_next:
+            products.append('basecamp')
+        return filter(lambda a: a['product'] in products,
+                      self.accounts()['accounts'])
