@@ -20,9 +20,10 @@ class Auth(object):
         """
         return self.oauth2.authorize_url(type='web_server')
 
-    def access_token(self, code):
-        """Return a dictionary with access token, expiration time, and
-        refresh token.
+    def access_token(self, code='', client_type='web_server', **kwargs):
+        """Get or renew an access token. Return a dictionary with
+        access token, expiration time, and refresh token (only for
+        new tokens).
         """
-        response = self.oauth2.get_token(code, type='web_server')
+        response = self.oauth2.get_token(code, type=client_type, **kwargs)
         return response
