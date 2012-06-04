@@ -16,10 +16,16 @@ class BasecampError(Exception):
     def error_from_response(cls, response):
         if response.status_code == 401:
             return BasecampUnauthorizedError(cls.error_message(response))
+        elif response.status_code == 404:
+            return BasecampNotFoundError(cls.error_message(response))
         return cls(cls.error_message(response))
 
 
 class BasecampUnauthorizedError(Exception):
+    pass
+
+
+class BasecampNotFoundError(Exception):
     pass
 
 
