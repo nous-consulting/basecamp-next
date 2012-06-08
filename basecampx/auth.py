@@ -15,10 +15,10 @@ class Auth(object):
                 self.AUTH_URL_NEW,
                 self.AUTH_URL_TOKEN)
 
-    def authorize_url(self):
+    def authorize_url(self, state=None):
         """Return an authorization url that opens a dialog for a user.
         """
-        return self.oauth2.authorize_url(type='web_server')
+        return self.oauth2.authorize_url(type='web_server', state=state)
 
     def access_token(self, code='', client_type='web_server', **kwargs):
         """Get or renew an access token. Return a dictionary with
