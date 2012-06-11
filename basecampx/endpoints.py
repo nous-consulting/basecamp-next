@@ -21,11 +21,11 @@ class BasecampError(Exception):
         return cls(cls.error_message(response))
 
 
-class BasecampUnauthorizedError(Exception):
+class BasecampUnauthorizedError(BasecampError):
     pass
 
 
-class BasecampNotFoundError(Exception):
+class BasecampNotFoundError(BasecampError):
     pass
 
 
