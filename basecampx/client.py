@@ -14,10 +14,11 @@ class Client(object):
         to the app; e.g. "BusyFlow (http://busyflow.com)".
         """
         self.account_id = account_id
-        self.session = requests.session(
-                headers={'User-Agent': user_agent,
-                         'Authorization': 'Bearer %s' % access_token,
-                         'Content-Type': 'application/json; charset=utf-8'})
+        self.session = requests.session()
+        self.session.headers = {
+                'User-Agent': user_agent,
+                'Authorization': 'Bearer %s' % access_token,
+                'Content-Type': 'application/json; charset=utf-8'}
 
     def accounts(self):
         url = urlparse.urljoin(self.LAUNCHPAD_URL,'authorization.json')
