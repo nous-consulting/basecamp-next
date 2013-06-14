@@ -88,6 +88,8 @@ class ProjectEndpoint(Endpoint):
         self.project_id = project_id
 
     def qualified_url(self, url):
+        if self.project_id is None:
+            return super(ProjectEndpoint, self).qualified_url(url)
         return super(ProjectEndpoint, self).qualified_url('%s/%s/%s' % (
             Projects.SECTION_URL, self.project_id, url))
 
